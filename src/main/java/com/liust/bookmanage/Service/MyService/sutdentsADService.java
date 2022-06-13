@@ -20,7 +20,11 @@ public interface sutdentsADService {
 
     Integer updataStudent(Integer user_id, students students);
 
-    students getOneStudent(String name);
+    students getOneStudentByName(String name);
+
+    students getOneStudentByID(String name);
+
+    students getOneStudentByAccount(String account);
 
     List<students> getAllStudents();
 }

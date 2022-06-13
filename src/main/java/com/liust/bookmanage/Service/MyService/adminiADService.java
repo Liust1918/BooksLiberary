@@ -19,4 +19,8 @@ public interface adminiADService {
 
     administrator getOneAdmin(String admini_name);
 
+    administrator login(String username,String password);
+
+    administrator register(String username, String password);
+
 }

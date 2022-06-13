@@ -19,10 +19,6 @@ public class R  {
         return new R(httpState.getCode(),httpState.getMsg(),data);
     }
 
-    public static R valueIsNull(Object data){
-        MyHttpState myHttpState =MyHttpState.Value_Null;
-        return new R(myHttpState.getCode(),myHttpState.getMsg(),data);
-    }
 
     public static R valueIsOk(Object data){
         MyHttpState myHttpState =MyHttpState.Successful_Run;

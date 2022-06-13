@@ -1,6 +1,7 @@
 package com.liust.bookmanage.Service.MyService;
 
 import com.liust.bookmanage.POJO.DO.books;
+import com.liust.bookmanage.POJO.VO.booksVO;
 
 import java.util.List;
 
@@ -22,13 +23,13 @@ public interface booksADService {
 
     books getOneBookById(Integer book_id);
 
-    List<books> getAllBooks();
+    List<booksVO> getAllBooks();
 
 
     Integer lendBook(books books, String user_name,String lend_day);
 
     Integer returnBook(books books, String user_name);
 
-    List<books> getLendBooksByUserName(String user_name);
+    List<books> getLendBooksByUserAccount(String user_name);
 
 }

@@ -38,12 +38,15 @@ public class students {
     private String studentclass;
 
     //用户加入时间(时间戳)
-    private String schooldata;
+    private String schooldate;
 
     //用户性别
     private String gender;
 
     //账号状态
     private String status;
+
+
+
 
 }

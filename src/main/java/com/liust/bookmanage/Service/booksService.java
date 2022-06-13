@@ -3,23 +3,21 @@ package com.liust.bookmanage.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.liust.bookmanage.DAO.booksRepository;
 import com.liust.bookmanage.POJO.DO.books;
+import com.liust.bookmanage.POJO.DO.studentBook;
 import com.liust.bookmanage.POJO.DO.students;
+import com.liust.bookmanage.POJO.VO.booksVO;
 import com.liust.bookmanage.Service.MyService.booksADService;
-import net.sf.jsqlparser.expression.DateTimeLiteralExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-import sun.util.resources.LocaleData;
 
 
 import javax.annotation.Resource;
-import javax.xml.crypto.Data;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +28,7 @@ import java.util.stream.Collectors;
  * @project BookManage
  */
 @Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED,readOnly = true)
 public class booksService implements booksADService {
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
@@ -40,8 +39,13 @@ public class booksService implements booksADService {
     @Resource
     private studentsService studentsService;
 
+    @Resource
+    private studentBookService studentBookService;
+
+
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer addBook(books books) {
         books.setStatus(0);
         int insert = booksRepository.insert(books);
@@ -49,12 +53,14 @@ public class booksService implements booksADService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer deleteBook(Integer book_id) {
         int i = booksRepository.deleteById(book_id);
         return i;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer updateBook(books books, Integer book_id) {
         books.setBookid(String.valueOf(book_id));
         int i = booksRepository.updateById(books);
@@ -62,6 +68,11 @@ public class booksService implements booksADService {
     }
 
 
+    /**
+     * 已弃用
+     * @param book_name
+     * @return
+     */
     @Override
     public books getOneBookByName(String book_name) {
         LambdaQueryWrapper<books> qw = new LambdaQueryWrapper<>();
@@ -73,16 +84,22 @@ public class booksService implements booksADService {
     @Override
     public books getOneBookById(Integer book_id) {
         LambdaQueryWrapper<books> qw = new LambdaQueryWrapper<>();
-        qw.eq(books::getBookid, book_id);
+        qw.eq(books::getId, book_id);
         books book = booksRepository.selectOne(qw);
         return book;
     }
 
     @Override
-    public List<books> getAllBooks() {
+    public List<booksVO> getAllBooks() {
         LambdaQueryWrapper<books> qw = new LambdaQueryWrapper<>();
         List<books> books = booksRepository.selectList(qw);
-        return books;
+        List<booksVO> collect = books.stream().map(a -> {
+            booksVO booksVO = new booksVO();
+            students oneStudentByID = studentsService.getOneStudentByID(String.valueOf(a.getLenduserid()));
+            booksVO.toBookVOByBooks(a,oneStudentByID==null?"无":oneStudentByID.getStudentname());
+            return booksVO;
+        }).collect(Collectors.toList());
+        return collect;
     }
 
 
@@ -90,14 +107,13 @@ public class booksService implements booksADService {
      * 借出书
      *
      * @param books
-     * @param user_name
+     * @param account_name
      * @return
      */
     @Override
-    public Integer lendBook(books books, String user_name,String lend_day) {
-
-
-        students oneStudent = studentsService.getOneStudent(user_name);
+    @Transactional(rollbackFor = Exception.class)
+    public Integer lendBook(books books, String account_name,String lend_day) {
+        students oneStudent = studentsService.getOneStudentByAccount(account_name);
         if(ObjectUtils.isEmpty(oneStudent)){
             return null;
         }
@@ -113,49 +129,74 @@ public class booksService implements booksADService {
         books.setStatus(1);
 
         int i = booksRepository.updateById(books);
+
+        //记录用户借阅
+        studentBook studentBook = new studentBook();
+        studentBook.setBookId(books.getId());
+        studentBook.setStudentId(oneStudent.getId());
+        studentBook.setLendTime(String.valueOf(lenddate));
+        studentBook.setReturnTime(String.valueOf(returndate));
+        Integer integer = studentBookService.addStudentBook(studentBook);
+        log.info(integer+"记录用户借阅成功 "+studentBook.toString());
+
         return i;
     }
 
     /**
      * 归还书
      * @param books
-     * @param user_name
+     * @param account_name
      * @return
      */
     @Override
-    public Integer returnBook(books books, String user_name) {
-        students oneStudent = studentsService.getOneStudent(user_name);
+    @Transactional(rollbackFor = Exception.class)
+    public Integer returnBook(books books, String account_name) {
+        students oneStudent = studentsService.getOneStudentByAccount(account_name);
         if(ObjectUtils.isEmpty(oneStudent)){
             return null;
         }
 
-        List<books> lendBooksByUserName = this.getLendBooksByUserName(user_name);
+        List<books> lendBooksByUserName = this.getLendBooksByUserAccount(account_name);
         List<books> collect = lendBooksByUserName.stream().filter(books1 ->
                 books1.getBookid().equals(books.getBookid())
         ).collect(Collectors.toList());
-        books books1 = collect.stream().findFirst().get();
-        books1.setLenduserid(null);
-        books1.setReturndate(null);
-        books1.setStatus(0);
-        books1.setLenduserid(null);
 
-        Integer integer = this.updateBook(books, books.getId());
+        books books1 = collect.stream().findFirst().get();
+        String lendtime = books1.getLenddate();
+        String returntime = books1.getReturndate();
+
+        books1.setLenddate("");
+        books1.setReturndate("");
+        books1.setStatus(0);
+        books1.setLenduserid(-1);
+        Integer integer = this.updateBook(books1, books1.getId());
+
+        //记录归还
+        studentBook studentBook = new studentBook();
+        studentBook.setBookId(books.getId());
+        studentBook.setStudentId(oneStudent.getId());
+        studentBook.setLendTime(String.valueOf(lendtime));
+        studentBook.setReturnTime(String.valueOf(returntime));
+        Integer integer1 = studentBookService.returnStudentBook(studentBook);
+        log.info(integer1+"记录用户归还成功 "+studentBook.toString());
+
         return integer;
     }
 
     /**
      * 查看学生的借出的书
-     * @param user_name
+     * @param account_name
      * @return
      */
     @Override
-    public List<books> getLendBooksByUserName(String user_name) {
-        students oneStudent = studentsService.getOneStudent(user_name);
+    public List<books> getLendBooksByUserAccount(String account_name) {
+        students oneStudent = studentsService.getOneStudentByAccount(account_name);
         if(ObjectUtils.isEmpty(oneStudent)){
             return null;
         }
 
         LambdaQueryWrapper<books> qw = new LambdaQueryWrapper<>();
+        qw.eq(books::getLenduserid, oneStudent.getId());
         List<books> books = booksRepository.selectList(qw);
         return books;
     }

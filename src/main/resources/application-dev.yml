@@ -9,10 +9,6 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
-  ##出现404错误 直接抛出NoHandlerFoundException
-  mvc:
-    throw-exception-if-no-handler-found: true
-    # 关闭默认资源映射，会导致static静态资源无法映射
   web:
     resources:
       add-mappings: false
@@ -24,4 +20,6 @@ logging:
     com.liust: debug
 server:
   port: 8081
+file:
+ path: C:\Users\刘裕龙\Desktop
 

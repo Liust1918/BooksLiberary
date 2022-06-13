@@ -1,1 +1,25 @@
+spring:
+  datasource:
+    username: liust
+    password: abc123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/book_mamage?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+  #    微服务配置中心为项目统一配置(满足yyyy-MM-dd HH:mm:ss格式)
+  #  原本格式yyyy-MM-dd HH:mm:ss不支持
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  web:
+    resources:
+      add-mappings: false
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  config-location: classpath:/mybatis-config.xml
+logging:
+  level:
+    com.liust: debug
+server:
+  port: 8081
+file:
+ path: /home/upload
 
