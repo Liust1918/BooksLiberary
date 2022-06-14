@@ -42,6 +42,9 @@ public class booksService implements booksADService {
     @Resource
     private studentBookService studentBookService;
 
+    @Resource
+    private categoryService categoryService;
+
 
 
     @Override
@@ -49,7 +52,7 @@ public class booksService implements booksADService {
     public Integer addBook(books books) {
         books.setStatus(0);
         int insert = booksRepository.insert(books);
-        return insert;
+        return books.getId();
     }
 
     @Override
@@ -96,7 +99,8 @@ public class booksService implements booksADService {
         List<booksVO> collect = books.stream().map(a -> {
             booksVO booksVO = new booksVO();
             students oneStudentByID = studentsService.getOneStudentByID(String.valueOf(a.getLenduserid()));
-            booksVO.toBookVOByBooks(a,oneStudentByID==null?"无":oneStudentByID.getStudentname());
+            String cateNameByBookId = categoryService.getCateNameByBookId(String.valueOf(a.getId()));
+            booksVO.toBookVOByBooks(a,oneStudentByID==null?"无":oneStudentByID.getStudentname(),cateNameByBookId);
             return booksVO;
         }).collect(Collectors.toList());
         return collect;

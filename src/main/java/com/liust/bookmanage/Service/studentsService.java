@@ -7,6 +7,7 @@ import com.liust.bookmanage.Service.MyService.sutdentsADService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -93,4 +94,33 @@ public class studentsService implements sutdentsADService {
         List<students> students = studentRepository.selectList(qw);
         return students;
     }
+
+
+    public Boolean studentLogin(String account,String password){
+        LambdaQueryWrapper<students> qw = new LambdaQueryWrapper<>();
+        qw.eq(students::getAccount, account);
+        students students = studentRepository.selectOne(qw);
+        if (ObjectUtils.isEmpty(students)) {
+            return null;
+        }
+        if(students.getPassword().equals(password)){
+            return true;
+        }
+        return false;
+    }
+
+
+    public Integer studentDatePassword(String account, String password) {
+        LambdaQueryWrapper<students> qw = new LambdaQueryWrapper<>();
+        qw.eq(students::getAccount, account);
+        students students = studentRepository.selectOne(qw);
+        if (ObjectUtils.isEmpty(students)) {
+            return null;
+        }
+        students.setPassword(password);
+        int i = studentRepository.updateById(students);
+        return i;
+    }
+
+
 }

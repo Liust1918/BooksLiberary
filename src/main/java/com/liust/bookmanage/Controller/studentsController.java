@@ -8,6 +8,7 @@ import com.liust.bookmanage.Service.studentsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -183,6 +184,85 @@ public class studentsController {
         R r = R.setResult(collect, MyHttpState.Successful_Run);
         return new ResponseEntity(r, HttpStatus.OK);
     }
+
+
+    /**
+     * 学生登录
+     *
+     * @param account
+     * @param password
+     * @return
+     */
+    @PostMapping("/stlogin")
+    public ResponseEntity studentLogin(String account, String password) {
+        String content = "";
+        if(account == null || account.equals("")){
+            content = "账号" + drop;
+        }
+        if (password == null || password.equals("")) {
+            content = "密码" + drop;
+        }
+        if(!content.equals("")){
+            R r = R.setResult(content, MyHttpState.Drop_content);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+
+        Boolean aBoolean = studentsService.studentLogin(account, password);
+        if(aBoolean==null){
+            content = "用户不存在";
+            R r = R.setResult(content, MyHttpState.Fail_Run);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+
+        if(aBoolean==false){
+            content = "密码不符合";
+            R r = R.setResult(content, MyHttpState.Fail_Run);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+        content = "学生";
+        R r = R.setResult(content, MyHttpState.Login_Successful);
+        return new ResponseEntity(r, HttpStatus.OK);
+    }
+
+
+    /**
+     * 纯修改学生密码
+     * @param account
+     * @param password
+     * @return
+     */
+    @PatchMapping("/updatePassword")
+    public ResponseEntity datePassword(String account,String password){
+        String content = "";
+        if(account == null || account.equals("")){
+            content = "账号" + drop;
+        }
+        if (password == null || password.equals("")) {
+            content = "密码" + drop;
+        }
+        if(!content.equals("")){
+            R r = R.setResult(content, MyHttpState.Drop_content);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+
+        Integer integer = studentsService.studentDatePassword(account, password);
+        if(integer==null){
+            content = "用户不存在";
+            R r = R.setResult(content, MyHttpState.Fail_Run);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+
+        if(integer.equals(0)){
+            content = "修改密码失败";
+            R r = R.setResult(content, MyHttpState.Fail_Run);
+            return new ResponseEntity(r, HttpStatus.OK);
+        }
+        content = "修改密码成功";
+        R r = R.setResult(content, MyHttpState.Successful_Run);
+        return new ResponseEntity(r, HttpStatus.OK);
+    }
+
+
 
 
 }

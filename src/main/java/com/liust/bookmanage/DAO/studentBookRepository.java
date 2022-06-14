@@ -14,6 +14,6 @@ import java.util.List;
  * @project BookManage
  */
 public interface studentBookRepository extends BaseMapper<studentBook> {
-    @Select("SELECT b.id,b.bookname,b.author,b.company,b.booknumber,b.bookid,b.picname,b.lenddate,b.returndate,b.price,s.studentname,sb.`status` FROM books as b, student_book as sb, students as s where b.id=sb.book_id and s.id=sb.student_id and s.account=#{account_name}")
+    @Select("SELECT b.id,b.bookname,b.author,b.company,b.booknumber,b.bookid,b.picname,sb.lend_time as lenddate,sb.return_time as returndate,b.price,s.studentname,sb.`status` FROM  books as b, student_book as sb, students as s where b.id=sb.book_id and s.id=sb.student_id and s.account=#{account_name}")
     List<studentBookDTO> getAllsbDTO(String account_name);
 }
