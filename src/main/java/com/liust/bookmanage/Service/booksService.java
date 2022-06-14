@@ -65,7 +65,7 @@ public class booksService implements booksADService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer updateBook(books books, Integer book_id) {
-        books.setBookid(String.valueOf(book_id));
+        books.setId(book_id);
         int i = booksRepository.updateById(books);
         return i;
     }
