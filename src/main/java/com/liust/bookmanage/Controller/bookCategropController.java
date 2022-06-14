@@ -104,7 +104,8 @@ public class bookCategropController {
             R r = R.setResult("不存在", MyHttpState.Fail_Run);
             return new ResponseEntity<>(r, HttpStatus.OK);
         }
-        if(oneById.getCateName().equals(category.getCateName())){
+        category oneByName = categoryService.getOneByName(category.getCateName());
+        if(oneByName!=null){
             R r = R.setResult("名字重复存在", MyHttpState.Fail_Run);
             return new ResponseEntity<>(r, HttpStatus.OK);
         }
